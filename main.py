@@ -2,26 +2,47 @@ import time
 from helpers import screen
 from helpers import light
 from helpers import color
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
+from queue import Queue
+from threading import Thread
+from pathlib import Path
 
 load_dotenv()
 
 saturated = False
-wait_for_transition=True
-current_color = screen.extract_color(saturated)
-target_color = current_color
+wait_for_transition=False
 
-while True:
-    target_color = screen.extract_color(saturated)
-    if target_color != current_color:
-        c_gradient, b_gradient = color.calculate_gradient(target_color, current_color, saturated, 25)
-        for i in range(0, len(c_gradient)):
-            start = time.time()
-            if not wait_for_transition:
-                new_target = screen.extract_color(saturated)
-                if new_target != target_color:
-                    target_color = new_target
-                    break
-            light.set_color(c_gradient[i], b_gradient[i])
-            current_color = c_gradient[i]
-            print('color change to', current_color, b_gradient[i], target_color, ' took', time.time() - start, 'seconds')
+# A thread that produces data
+def producer(out_q: Queue):
+    current_color = screen.extract_color(saturated)
+    while True:
+        target_color = screen.extract_color(saturated)
+        if current_color != target_color:
+            out_q.put(target_color)
+            current_color = target_color
+          
+# A thread that consumes data
+def consumer(in_q: Queue):
+    current_color = screen.extract_color(saturated)
+    while True:
+        target_color = in_q.get()
+        if target_color != current_color:
+            c_gradient, b_gradient = color.calculate_gradient(target_color, current_color, saturated, 25)
+            for i in range(0, len(c_gradient)):
+                start = time.time()
+                if not wait_for_transition:
+                    new_target = in_q.queue[0] if in_q.qsize() > 0 else None
+                    if new_target != None and new_target != target_color:
+                        target_color = new_target
+                        print('switching target')
+                        break
+                light.set_color(c_gradient[i], b_gradient[i])
+                current_color = c_gradient[i]
+                print('color change from', current_color, 'to', target_color + [b_gradient[i]], ' took', time.time() - start, 'seconds')
+
+# Create the shared queue and launch both threads
+q = Queue()
+t1 = Thread(target = consumer, args =(q, ))
+t2 = Thread(target = producer, args =(q, ))
+t1.start()
+t2.start()
