@@ -10,13 +10,16 @@ headers = {
 }
 
 def set_color(color_rgb, brightness):
-    data = {
-        "entity_id": "light.bedroom",
-        "rgb_color": color_rgb,
-        "brightness": brightness,
-        "transition": 1
-        }
+    try:
+        data = {
+            "entity_id": "light.bedroom",
+            "rgb_color": color_rgb,
+            "brightness": brightness,
+            "transition": 1
+            }
 
-    response = requests.request('post', url, headers=headers, data=json.dumps(data))
-    if response.status_code != 200:
-        print(response.text)
+        response = requests.request('post', url, headers=headers, data=json.dumps(data))
+        if response.status_code != 200:
+            print(response.text)
+    except:
+        pass
