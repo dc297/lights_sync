@@ -64,3 +64,6 @@ def calculate_gradient(target, current, saturated, max_steps):
     color_gradient_saturated = [get_saturated_color(col) for col in color_gradient] if saturated else color_gradient
     brightness_gradient = calculate_brightness_gradient(target, current, steps)
     return color_gradient_saturated, brightness_gradient
+
+def to_terminal_color(rgb_color: list):
+    return '\x1b[38;2;' + ';'.join([str(i) for i in rgb_color]) + 'm' + str(rgb_color) + '\x1b[0m'

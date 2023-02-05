@@ -37,8 +37,8 @@ def consumer(in_q: Queue):
                         print('switching target')
                         break
                 light.set_color(c_gradient[i], b_gradient[i])
+                print('color change from', color.to_terminal_color(current_color), 'to', color.to_terminal_color(target_color), b_gradient[i], ' took', time.time() - start, 'seconds')
                 current_color = c_gradient[i]
-                print('color change from', current_color, 'to', target_color + [b_gradient[i]], ' took', time.time() - start, 'seconds')
 
 # Create the shared queue and launch both threads
 q = Queue()
